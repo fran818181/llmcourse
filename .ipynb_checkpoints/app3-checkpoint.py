@@ -1,22 +1,42 @@
+import locale
+def getpreferredencoding(do_setlocale = True):
+    return "UTF-8"
+locale.getpreferredencoding = getpreferredencoding
+
+import json
+import pandas as pd
+import time
+from string import punctuation
+from collections import Counter
+from heapq import nlargest
+import nltk
+import numpy as np
+from tqdm import tqdm
+from sentence_transformers import SentenceTransformer, util
+# import tiktoken
+from openai.embeddings_utils import get_embedding, cosine_similarity
 import streamlit as st
 import torch
-from transformers import CLIPProcessor, CLIPModel
-from PIL import Image
 import requests
-import torch.nn.functional as F
-
+import json
+import re
+from tqdm import tqdm
+from sentence_transformers import SentenceTransformer, CrossEncoder, util
+from openai.embeddings_utils import get_embedding, cosine_similarity
 
 # Import the raw input data
 # Store it in a dataframe
 import pandas as pd
 data_url = "df_miami_combined.csv"
 df_combined = pd.read_csv(data_url)
+print(df_combined.head())
 
 # Query the data
 # Create a query function that takes the query text as input, embeds it, and
 # searches the table and returns the X best hotels and the Y most relevant
 # reviews of those selected hotels.
 
+embedder = SentenceTransformer('all-mpnet-base-v2')
 
 def search(query, num_top_hotels, num_top_reviews_per_hotel):
   # Embed the query
