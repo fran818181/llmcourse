@@ -4,7 +4,7 @@ import time
 from string import punctuation
 from collections import Counter
 from heapq import nlargest
-#import nltk
+import nltk
 import numpy as np
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer, util
