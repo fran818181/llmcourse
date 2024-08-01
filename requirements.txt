@@ -7,3 +7,4 @@ sentence-transformers
 rank_bm25
 openai==0.27.7
 nltk
+matplotlib
