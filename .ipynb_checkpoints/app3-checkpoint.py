@@ -1,8 +1,3 @@
-import locale
-def getpreferredencoding(do_setlocale = True):
-    return "UTF-8"
-locale.getpreferredencoding = getpreferredencoding
-
 import json
 import pandas as pd
 import time
@@ -13,8 +8,6 @@ import nltk
 import numpy as np
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer, util
-# import tiktoken
-from openai.embeddings_utils import get_embedding, cosine_similarity
 import streamlit as st
 import torch
 import requests
@@ -27,9 +20,10 @@ from openai.embeddings_utils import get_embedding, cosine_similarity
 # Import the raw input data
 # Store it in a dataframe
 import pandas as pd
-data_url = "df_miami_combined.csv"
-df_combined = pd.read_csv(data_url)
-print(df_combined.head())
+df_combined = pd.read_pickle('df_miami_combined.pkl')
+#print(df_combined["embedding"].head())
+# Ensure all embeddings are numpy arrays
+#df_combined["embedding"] = df_combined["embedding"].apply(np.array,dtype=float32)
 
 # Query the data
 # Create a query function that takes the query text as input, embeds it, and
@@ -38,20 +32,22 @@ print(df_combined.head())
 
 embedder = SentenceTransformer('all-mpnet-base-v2')
 
-def search(query, num_top_hotels, num_top_reviews_per_hotel):
+def search(query2, num_top_hotels, num_top_reviews_per_hotel):
   # Embed the query
-  query_embedding = embedder.encode(query)
-
-  # Cosine_Similarity applied to each cell of the embedding column of the
+  query_embedding = embedder.encode(query2)
+  query_embedding = torch.tensor(query_embedding, dtype=torch.float32)
+    # Cosine_Similarity applied to each cell of the embedding column of the
   # df_combined dataframe and store in a new column called cosine_similarity
   # df_combined["cosine_similarity"] = df_combined["embedding"].apply(lambda x: util.cos_sim(query_embedding, x))
-  df_combined["cosine_similarity"] = df_combined["embedding"].apply(lambda x: cosine_similarity(x, query_embedding.reshape(768,-1)))
-
+  df_results = df_combined.copy()
+  df_results["cosine_similarity"] = df_combined["embedding"].apply(lambda x: util.cos_sim(query_embedding, x))
+  #df_combined["cosine_similarity"] = df_combined["embedding"].apply(lambda x: util.cos_sim(torch.tensor(x, dtype=torch.float32), query_embedding).item())
   
   # Create a new dataframe that contains the results above ordered by
   # cosine_similarity in descending order and containing only the name, review,
   # cosine_similarity columns
-  results = df_combined.sort_values("cosine_similarity", ascending=False)[["name", "review", "cosine_similarity"]]
+      
+  results = df_results.sort_values("cosine_similarity", ascending=False)[["name", "review", "cosine_similarity"]]
   #print(results)
 
   # Display them in a very concise and ordered manner.
@@ -88,7 +84,8 @@ query = st.text_input("Enter your search query:")
 # Display the best matching image based on the query
 if query:
     st.write("Searching for:", query)
-    search(query, num_top_hotels=2, num_top_reviews_per_hotel=3) 
+    # search(query, num_top_hotels=2, num_top_reviews_per_hotel=3) 
+    st.write(search(query, num_top_hotels=2, num_top_reviews_per_hotel=3) )
 
 
 
